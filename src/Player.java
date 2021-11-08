@@ -1,8 +1,14 @@
 import ui.PlayerWindow;
+import ui.AddSongWindow;
 
 import java.awt.event.*;
 
 public class Player {
+    private final PlayerWindow window;
+    private AddSongWindow currentAddSongWindow;
+    public String[][] queueArray = {};
+    private int currentSongID = 0;
+
     public Player() {
         String windowTitle = "Spotifraco";
 
@@ -53,7 +59,7 @@ public class Player {
             }
         };
         String[][] queueArray = new String[1][1];
-        final PlayerWindow window = new PlayerWindow(
+        this.window = new PlayerWindow(
                 playNowAction,
                 RemoveAction,
                 AddSongAction,
@@ -70,6 +76,30 @@ public class Player {
         );
     }
     private void addSong() {
+        ActionListener addSongOkAction = e -> {
+            String[] array = currentAddSongWindow.getSong();
+            addSongToQueue(array);
+        };
+        WindowListener listener = this.window.getAddSongWindowListener();
+        AddSongWindow newWindow = new AddSongWindow(
+                Integer.toString(this.currentSongID),
+                addSongOkAction,
+                listener
+        );
+        this.currentAddSongWindow = newWindow;
+        newWindow.start();
+        this.currentSongID ++;
+    }
+
+    private void addSongToQueue(String[] newSong) {
+        String[][] newQueueList = new String[queueArray.length + 1][7];
+        System.arraycopy(
+                queueArray, 0,
+                newQueueList, 0,
+                queueArray.length
+        );
+        newQueueList[queueArray.length] = newSong;
+        window.updateQueueList(newQueueList);
     }
 }
 
