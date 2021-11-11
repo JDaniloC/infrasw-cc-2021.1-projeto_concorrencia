@@ -5,10 +5,15 @@ import java.awt.event.*;
 import java.util.Objects;
 
 public class Player {
+
     private final PlayerWindow window;
     private AddSongWindow currentAddSongWindow;
     public String[][] queueArray = {};
     private int currentSongID = 0;
+    private int currentScrollerPosition = 0;
+    private ScrollerThread scrollerThread;
+    private Boolean somethingIsPlaying = false;
+
 
     public Player() {
         String windowTitle = "Spotifraco";
@@ -16,12 +21,13 @@ public class Player {
         ActionListener playNowAction = e -> playSong();
         ActionListener RemoveAction = e -> removeSong();
         ActionListener AddSongAction = e -> addSong();
-        ActionListener PlayPauseAction = e -> System.out.println("Clicou no PlayPause!");
+        ActionListener PlayPauseAction = e -> playAndPause();
         ActionListener StopAction = e -> stopSong();
         ActionListener NextAction = e -> System.out.println("Clicou no Next!");
         ActionListener PreviousAction = e -> System.out.println("Clicou no Previous!");
         ActionListener ShuffleAction = e -> System.out.println("Clicou no Shuffle!");
         ActionListener RepeatAction = e -> System.out.println("Clicou no Repeat!");
+
         MouseListener scrubber = new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -131,6 +137,19 @@ public class Player {
 
     private void stopSong() {
         this.window.resetMiniPlayer();
+        somethingIsPlaying = false;
+    }
+
+    private void playAndPause() {
+        if (!somethingIsPlaying) {
+            somethingIsPlaying = true;
+            scrollerThread = new ScrollerThread(window, window.getScrubberValue(), 60);
+            scrollerThread.start();
+            }
+        else {
+            somethingIsPlaying = false;
+            scrollerThread.interrupt();
+        }
     }
 }
 
