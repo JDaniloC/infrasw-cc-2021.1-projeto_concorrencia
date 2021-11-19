@@ -15,15 +15,31 @@ public class ScrollerThread extends Thread{
 
     @Override
     public void run() {
-            for (int i = starting; i < length; i++) {
-                window.updateMiniplayer(true, true, false, i, length, 0, 0);
+            for (int second = starting; second < length; second++) {
+                window.updateMiniplayer(
+                        true,
+                        true,
+                        false,
+                        second,
+                        length,
+                        0,
+                        0
+                );
                 try {
                     Thread.sleep(800);
                 } catch (InterruptedException e) {
-                    window.updateMiniplayer(true, false, false, i, length, 0, 0);
-                    return;
+                    e.printStackTrace();
                 }
             }
+            window.updateMiniplayer(
+                    true,
+                    false,
+                    false,
+                    length,
+                    length,
+                    0,
+                    0
+            );
         }
     }
 

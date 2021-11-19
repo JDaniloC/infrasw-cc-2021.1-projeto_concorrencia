@@ -8,10 +8,13 @@ public class Player {
 
     private final PlayerWindow window;
     private AddSongWindow currentAddSongWindow;
+    private ScrollerThread scrollerThread;
     public String[][] queueArray = {};
+
     private int currentSongID = 0;
     private int currentScrollerPosition = 0;
-    private ScrollerThread scrollerThread;
+    private int songLengthInSeconds = 0;
+
     private Boolean somethingIsPlaying = false;
 
 
@@ -30,40 +33,26 @@ public class Player {
 
         MouseListener scrubber = new MouseListener() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                System.out.println("Clicou no mouse");
-            }
+            public void mouseClicked(MouseEvent e) {}
 
             @Override
-            public void mousePressed(MouseEvent e) {
-                System.out.println("Pressionou o mouse");
-            }
+            public void mousePressed(MouseEvent e) {}
 
             @Override
-            public void mouseReleased(MouseEvent e) {
-                System.out.println("Soltou o mouse");
-            }
+            public void mouseReleased(MouseEvent e) {}
 
             @Override
-            public void mouseEntered(MouseEvent e) {
-                // Do nothing
-            }
+            public void mouseEntered(MouseEvent e) {}
 
             @Override
-            public void mouseExited(MouseEvent e) {
-                // Do nothing
-            }
+            public void mouseExited(MouseEvent e) {}
         };
         MouseMotionListener motion = new MouseMotionListener() {
             @Override
-            public void mouseDragged(MouseEvent e) {
-                System.out.println("Mouse dragged");
-            }
+            public void mouseDragged(MouseEvent e) {}
 
             @Override
-            public void mouseMoved(MouseEvent e) {
-                // Do nothing
-            }
+            public void mouseMoved(MouseEvent e) {}
         };
         String[][] queueArray = new String[1][1];
         this.window = new PlayerWindow(
@@ -130,6 +119,7 @@ public class Player {
             if (Objects.equals(song[6], Integer.toString(id))) {
                 this.window.updatePlayingSongInfo(
                         song[0], song[1], song[2]);
+                this.songLengthInSeconds = Integer.parseInt(song[5]);
             }
         }
         this.window.enableScrubberArea();
@@ -141,15 +131,24 @@ public class Player {
     }
 
     private void playAndPause() {
-        if (!somethingIsPlaying) {
-            somethingIsPlaying = true;
-            scrollerThread = new ScrollerThread(window, window.getScrubberValue(), 60);
-            scrollerThread.start();
-            }
-        else {
+        int currentSecond = 0;
+        if (songLengthInSeconds != window.getScrubberValue()) {
+            currentSecond = window.getScrubberValue();
+        } else {
             somethingIsPlaying = false;
+        }
+
+        if (!somethingIsPlaying) {
+            scrollerThread = new ScrollerThread(
+                    window,
+                    currentSecond,
+                    songLengthInSeconds
+            );
+            scrollerThread.start();
+        } else {
             scrollerThread.interrupt();
         }
+        somethingIsPlaying = !somethingIsPlaying;
     }
 }
 
