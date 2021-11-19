@@ -149,6 +149,7 @@ public class Player {
             scrollerThread.interrupt();
         }
         somethingIsPlaying = !somethingIsPlaying;
+        window.updatePlayPauseButton(somethingIsPlaying);
     }
 }
 

@@ -15,6 +15,7 @@ public class ScrollerThread extends Thread{
 
     @Override
     public void run() {
+            boolean wasInterrupted = false;
             for (int second = starting; second < length; second++) {
                 window.updateMiniplayer(
                         true,
@@ -28,18 +29,21 @@ public class ScrollerThread extends Thread{
                 try {
                     Thread.sleep(800);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    second = length;
+                    wasInterrupted = true;
                 }
             }
-            window.updateMiniplayer(
-                    true,
-                    false,
-                    false,
-                    length,
-                    length,
-                    0,
-                    0
-            );
+            if (!wasInterrupted) {
+                window.updateMiniplayer(
+                        true,
+                        false,
+                        false,
+                        length,
+                        length,
+                        0,
+                        0
+                );
+            }
         }
     }
 
