@@ -4,13 +4,23 @@ import ui.PlayerWindow;
 public class ScrollerThread extends Thread{
 
     private final PlayerWindow window;
+    private final Player player;
     private int length;
     private int starting;
+    private int songIndex;
+    private int queueSize;
+    private boolean repeat;
 
-    public ScrollerThread(PlayerWindow window, int starting, int length) {
+    public ScrollerThread(PlayerWindow window, Player player,
+                          boolean repeat, int starting, int length,
+                          int songIndex, int queueSize) {
         this.window = window;
+        this.player = player;
         this.length = length;
+        this.repeat = repeat;
         this.starting = starting;
+        this.songIndex = songIndex;
+        this.queueSize = queueSize;
     }
 
     @Override
@@ -20,13 +30,14 @@ public class ScrollerThread extends Thread{
                 window.updateMiniplayer(
                         true,
                         true,
-                        false,
+                        this.repeat,
                         second,
                         length,
-                        0,
-                        0
+                        this.songIndex,
+                        this.queueSize
                 );
                 try {
+                    //noinspection BusyWait
                     Thread.sleep(800);
                 } catch (InterruptedException e) {
                     second = length;
@@ -37,12 +48,21 @@ public class ScrollerThread extends Thread{
                 window.updateMiniplayer(
                         true,
                         false,
-                        false,
+                        this.repeat,
                         length,
                         length,
-                        0,
-                        0
+                        this.songIndex,
+                        this.queueSize
                 );
+                if ((this.repeat && this.songIndex == this.queueSize - 1)
+                        || this.songIndex < this.queueSize - 1) {
+                    try {
+                        Thread.sleep(800);
+                        this.player.nextSong();
+                    } catch (InterruptedException e) {
+                        // Do nothing
+                    }
+                }
             }
         }
     }

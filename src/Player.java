@@ -3,6 +3,7 @@ import ui.AddSongWindow;
 
 import java.awt.event.*;
 import java.util.Objects;
+import java.util.Random;
 
 public class Player {
 
@@ -10,13 +11,16 @@ public class Player {
     private AddSongWindow currentAddSongWindow;
     private ScrollerThread scrollerThread;
     public String[][] queueArray = {};
+    private Random random = new Random();
 
     private int currentSongID = 0;
-    private int currentScrollerPosition = 0;
+    private boolean repeat = false;
+    private boolean shuffle = false;
+    private int lastSongIndex = 0;
+    private int selectedSongIndex = 0;
     private int songLengthInSeconds = 0;
 
     private Boolean somethingIsPlaying = false;
-
 
     public Player() {
         String windowTitle = "Spotifraco";
@@ -26,10 +30,10 @@ public class Player {
         ActionListener AddSongAction = e -> addSong();
         ActionListener PlayPauseAction = e -> playAndPause();
         ActionListener StopAction = e -> stopSong();
-        ActionListener NextAction = e -> System.out.println("Clicou no Next!");
-        ActionListener PreviousAction = e -> System.out.println("Clicou no Previous!");
-        ActionListener ShuffleAction = e -> System.out.println("Clicou no Shuffle!");
-        ActionListener RepeatAction = e -> System.out.println("Clicou no Repeat!");
+        ActionListener NextAction = e -> nextSong();
+        ActionListener PreviousAction = e -> previousSong();
+        ActionListener ShuffleAction = e -> shuffleSong();
+        ActionListener RepeatAction = e -> repeatSong();
 
         MouseListener scrubber = new MouseListener() {
             @Override
@@ -72,6 +76,9 @@ public class Player {
         );
     }
 
+    private void shuffleSong() { this.shuffle = !this.shuffle; }
+    private void repeatSong() { this.repeat = !this.repeat; }
+
     private void addSongToQueue(String[] newSong) {
         String[][] newQueueList = new String[queueArray.length + 1][7];
         System.arraycopy(
@@ -113,20 +120,77 @@ public class Player {
         this.window.updateQueueList(newQueueList);
     }
 
-    private void playSong() {
-        int id = this.window.getSelectedSongID();
-        for (String[] song: queueArray) {
+    private void updateCurrentSong(String[] song) {
+        stopSong();
+        this.window.updatePlayingSongInfo(song[0], song[1], song[2]);
+        this.songLengthInSeconds = Integer.parseInt(song[5]);
+        this.window.enableScrubberArea();
+    }
+
+    private int getCurrentSongIndex(int id) {
+        for (int index = 0; index < queueArray.length; index++) {
+            String[] song = queueArray[index];
             if (Objects.equals(song[6], Integer.toString(id))) {
-                this.window.updatePlayingSongInfo(
-                        song[0], song[1], song[2]);
-                this.songLengthInSeconds = Integer.parseInt(song[5]);
+                return index;
             }
         }
-        this.window.enableScrubberArea();
+        return -1;
+    }
+
+    private void updateSong(int index) {
+        String[] song = queueArray[index];
+        this.selectedSongIndex = index;
+        updateCurrentSong(song);
+    }
+
+    public void nextSong() {
+        int index = this.selectedSongIndex;
+        this.lastSongIndex = index;
+
+        if (this.shuffle) {
+            index = this.random.nextInt(queueArray.length - 1);
+        } else {
+            if (index != queueArray.length - 1) {
+                index = index + 1;
+            } else {
+                index = 0;
+            }
+        }
+        boolean wasPlaying = this.somethingIsPlaying;
+        this.updateSong(index);
+        if (wasPlaying) {
+            playAndPause();
+        }
+    }
+
+    private void previousSong() {
+        int index = this.lastSongIndex;
+
+        if (index >= this.queueArray.length) {
+            index = this.selectedSongIndex;
+
+            if (index != 0) {
+                index = index - 1;
+            } else {
+                index = queueArray.length - 1;
+            }
+        }
+        boolean wasPlaying = this.somethingIsPlaying;
+        this.updateSong(index);
+        if (wasPlaying) {
+            playAndPause();
+        }
+    }
+
+    private void playSong() {
+        int id = this.window.getSelectedSongID();
+        int index = getCurrentSongIndex(id);
+        this.updateSong(index);
     }
 
     private void stopSong() {
         this.window.resetMiniPlayer();
+        if (scrollerThread != null) scrollerThread.interrupt();
         somethingIsPlaying = false;
     }
 
@@ -141,8 +205,12 @@ public class Player {
         if (!somethingIsPlaying) {
             scrollerThread = new ScrollerThread(
                     window,
+                    this,
+                    this.repeat,
                     currentSecond,
-                    songLengthInSeconds
+                    songLengthInSeconds,
+                    this.selectedSongIndex,
+                    this.queueArray.length
             );
             scrollerThread.start();
         } else {
