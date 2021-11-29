@@ -16,7 +16,6 @@ public class Player {
     private int currentSongID = 0;
     private boolean repeat = false;
     private boolean shuffle = false;
-    private int lastSongIndex = 0;
     private int selectedSongIndex = 0;
     private int songLengthInSeconds = 0;
 
@@ -40,10 +39,17 @@ public class Player {
             public void mouseClicked(MouseEvent e) {}
 
             @Override
-            public void mousePressed(MouseEvent e) {}
+            public void mousePressed(MouseEvent e) {
+                if (scrollerThread != null) scrollerThread.interrupt();
+            }
 
             @Override
-            public void mouseReleased(MouseEvent e) {}
+            public void mouseReleased(MouseEvent e) {
+                if (somethingIsPlaying) {
+                    somethingIsPlaying = false;
+                    playAndPause();
+                }
+            }
 
             @Override
             public void mouseEntered(MouseEvent e) {}
@@ -145,10 +151,11 @@ public class Player {
 
     public void nextSong() {
         int index = this.selectedSongIndex;
-        this.lastSongIndex = index;
 
         if (this.shuffle) {
-            index = this.random.nextInt(queueArray.length - 1);
+            do {
+                index = this.random.nextInt(queueArray.length - 1);
+            } while (index == this.selectedSongIndex && this.queueArray.length > 1);
         } else {
             if (index != queueArray.length - 1) {
                 index = index + 1;
@@ -164,16 +171,12 @@ public class Player {
     }
 
     private void previousSong() {
-        int index = this.lastSongIndex;
+        int index = this.selectedSongIndex;
 
-        if (index >= this.queueArray.length) {
-            index = this.selectedSongIndex;
-
-            if (index != 0) {
-                index = index - 1;
-            } else {
-                index = queueArray.length - 1;
-            }
+        if (index != 0) {
+            index = index - 1;
+        } else {
+            index = queueArray.length - 1;
         }
         boolean wasPlaying = this.somethingIsPlaying;
         this.updateSong(index);
