@@ -4,8 +4,12 @@ import ui.AddSongWindow;
 import java.awt.event.*;
 import java.util.Objects;
 import java.util.Random;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Player {
+
+    private final Lock lock = new ReentrantLock();
 
     private final PlayerWindow window;
     private AddSongWindow currentAddSongWindow;
@@ -115,15 +119,21 @@ public class Player {
 
     private void removeSong() {
         int id = this.window.getSelectedSongID();
-        String[][] newQueueList = new String[queueArray.length - 1][7];
-        for (int index = 0; index < queueArray.length; index++) {
-            String[] song = queueArray[index];
-            if (!Objects.equals(song[6], Integer.toString(id))) {
-                newQueueList[index] = song;
+        try {
+            lock.lock();
+            String[][] newQueueList = new String[queueArray.length - 1][7];
+            for (int index = 0; index < queueArray.length; index++) {
+                String[] song = queueArray[index];
+                if (!Objects.equals(song[6], Integer.toString(id))) {
+                    newQueueList[index] = song;
+                }
             }
+            this.queueArray = newQueueList;
+            this.window.updateQueueList(newQueueList);
         }
-        this.queueArray = newQueueList;
-        this.window.updateQueueList(newQueueList);
+        finally {
+            lock.unlock();
+        }
     }
 
     private void updateCurrentSong(String[] song) {
