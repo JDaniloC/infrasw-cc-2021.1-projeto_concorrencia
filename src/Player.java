@@ -199,6 +199,7 @@ public class Player {
         int id = this.window.getSelectedSongID();
         int index = getCurrentSongIndex(id);
         this.updateSong(index);
+        this.playAndPause();
     }
 
     private void stopSong() {
