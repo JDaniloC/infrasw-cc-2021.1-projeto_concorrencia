@@ -38,7 +38,7 @@ public class ScrollerThread extends Thread{
                 );
                 try {
                     //noinspection BusyWait
-                    Thread.sleep(800);
+                    Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     second = length;
                     wasInterrupted = true;
@@ -62,6 +62,17 @@ public class ScrollerThread extends Thread{
                     } catch (InterruptedException e) {
                         // Do nothing
                     }
+                }
+                else {
+                    window.updateMiniplayer(
+                            false,
+                            false,
+                            this.repeat,
+                            length,
+                            length,
+                            this.songIndex,
+                            this.queueSize
+                    );
                 }
             }
         }
