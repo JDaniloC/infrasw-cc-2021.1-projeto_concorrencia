@@ -90,15 +90,21 @@ public class Player {
     private void repeatSong() { this.repeat = !this.repeat; }
 
     private void addSongToQueue(String[] newSong) {
-        String[][] newQueueList = new String[queueArray.length + 1][7];
-        System.arraycopy(
-                queueArray, 0,
-                newQueueList, 0,
-                queueArray.length
-        );
-        newQueueList[queueArray.length] = newSong;
-        window.updateQueueList(newQueueList);
-        this.queueArray = newQueueList;
+        try {
+            lock.lock();
+            String[][] newQueueList = new String[queueArray.length + 1][7];
+            System.arraycopy(
+                    queueArray, 0,
+                    newQueueList, 0,
+                    queueArray.length
+            );
+            newQueueList[queueArray.length] = newSong;
+            window.updateQueueList(newQueueList);
+            this.queueArray = newQueueList;
+        }
+        finally {
+            lock.unlock();
+        }
     }
 
     private void addSong() {
