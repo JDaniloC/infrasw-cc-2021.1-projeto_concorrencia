@@ -125,14 +125,13 @@ public class Player {
 
     private void removeSong() {
         int id = this.window.getSelectedSongID();
+        int songIndex = getCurrentSongIndex(id);
         try {
             lock.lock();
             String[][] newQueueList = new String[queueArray.length - 1][7];
-            for (int index = 0; index < queueArray.length; index++) {
-                String[] song = queueArray[index];
-                if (!Objects.equals(song[6], Integer.toString(id))) {
-                    newQueueList[index] = song;
-                }
+            for (int index = 0; index < queueArray.length-1; index++) {
+                if (index < songIndex) {newQueueList[index] = queueArray[index];}
+                else {newQueueList[index] = queueArray[index+1];}
             }
             this.queueArray = newQueueList;
             this.window.updateQueueList(newQueueList);
