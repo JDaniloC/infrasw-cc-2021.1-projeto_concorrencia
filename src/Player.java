@@ -11,13 +11,14 @@ public class Player {
 
     private final Lock lock = new ReentrantLock();
 
-    private final PlayerWindow window;
     private AddSongWindow currentAddSongWindow;
     private ScrollerThread scrollerThread;
+    private final PlayerWindow window;
     public String[][] queueArray = {};
     private Random random = new Random();
 
     private int currentSongID = 0;
+    private int nextSongID = 0;
     private boolean repeat = false;
     private boolean shuffle = false;
     private int selectedSongIndex = 0;
@@ -84,6 +85,7 @@ public class Player {
                 windowTitle,
                 queueArray
         );
+        this.window.updateQueueList(this.queueArray);
     }
 
     private void shuffleSong() { this.shuffle = !this.shuffle; }
@@ -114,12 +116,12 @@ public class Player {
         };
         WindowListener listener = this.window.getAddSongWindowListener();
         AddSongWindow newWindow = new AddSongWindow(
-                Integer.toString(this.currentSongID),
+                Integer.toString(this.nextSongID),
                 addSongOkAction,
                 listener
         );
         this.currentAddSongWindow = newWindow;
-        this.currentSongID ++;
+        this.nextSongID ++;
         newWindow.start();
     }
 
@@ -147,6 +149,7 @@ public class Player {
         stopSong();
         this.window.updatePlayingSongInfo(song[0], song[1], song[2]);
         this.songLengthInSeconds = Integer.parseInt(song[5]);
+        this.currentSongID = Integer.parseInt(song[6]);
         this.window.enableScrubberArea();
     }
 
@@ -213,6 +216,7 @@ public class Player {
         this.window.resetMiniPlayer();
         if (scrollerThread != null) scrollerThread.interrupt();
         somethingIsPlaying = false;
+        this.currentSongID = -1;
     }
 
     private void playAndPause() {

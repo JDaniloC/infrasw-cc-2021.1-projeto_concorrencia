@@ -54,16 +54,15 @@ public class ScrollerThread extends Thread{
                         this.songIndex,
                         this.queueSize
                 );
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    // Do nothing
+                }
                 if ((this.repeat && this.songIndex == this.queueSize - 1)
                         || this.songIndex < this.queueSize - 1) {
-                    try {
-                        Thread.sleep(1000);
-                        this.player.nextSong();
-                    } catch (InterruptedException e) {
-                        // Do nothing
-                    }
-                }
-                else {
+                    this.player.nextSong();
+                } else {
                     window.updateMiniplayer(
                             false,
                             false,
