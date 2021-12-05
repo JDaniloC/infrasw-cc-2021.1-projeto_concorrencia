@@ -129,7 +129,7 @@ public class Player {
         try {
             lock.lock();
             if (songIndex == queueArray.length-1) {window.resetMiniPlayer();}
-            else {nextSong();}
+            else if (id == currentSongID) {nextSong();}
             String[][] newQueueList = new String[queueArray.length - 1][7];
             for (int index = 0; index < queueArray.length-1; index++) {
                 if (index < songIndex) {newQueueList[index] = queueArray[index];}
