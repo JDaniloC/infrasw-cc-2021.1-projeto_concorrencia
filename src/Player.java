@@ -130,8 +130,8 @@ public class Player {
         int songIndex = getCurrentSongIndex(id);
         try {
             lock.lock();
-            if (songIndex == queueArray.length-1) {window.resetMiniPlayer();}
-            else if (id == currentSongID) {nextSong();}
+            if (songIndex == queueArray.length-1) {stopSong();}
+            else if (songIndex == selectedSongIndex) {nextSong();}
             String[][] newQueueList = new String[queueArray.length - 1][7];
             for (int index = 0; index < queueArray.length-1; index++) {
                 if (index < songIndex) {newQueueList[index] = queueArray[index];}
@@ -207,6 +207,7 @@ public class Player {
 
     private void playSong() {
         int id = this.window.getSelectedSongID();
+        currentSongID = id;
         int index = getCurrentSongIndex(id);
         this.updateSong(index);
         this.playAndPause();
