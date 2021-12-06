@@ -139,6 +139,8 @@ public class Player {
             }
             this.queueArray = newQueueList;
             this.window.updateQueueList(newQueueList);
+            selectedSongIndex -= 1;
+            currentSongID = Integer.parseInt(queueArray[selectedSongIndex][6]);
         }
         finally {
             lock.unlock();
