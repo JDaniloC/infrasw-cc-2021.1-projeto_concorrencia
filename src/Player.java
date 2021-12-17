@@ -92,21 +92,26 @@ public class Player {
     private void repeatSong() { this.repeat = !this.repeat; }
 
     private void addSongToQueue(String[] newSong) {
-        try {
-            lock.lock();
-            String[][] newQueueList = new String[queueArray.length + 1][7];
-            System.arraycopy(
-                    queueArray, 0,
-                    newQueueList, 0,
-                    queueArray.length
-            );
-            newQueueList[queueArray.length] = newSong;
-            window.updateQueueList(newQueueList);
-            this.queueArray = newQueueList;
-        }
-        finally {
-            lock.unlock();
-        }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    lock.lock();
+                    String[][] newQueueList = new String[queueArray.length + 1][7];
+                    System.arraycopy(
+                            queueArray, 0,
+                            newQueueList, 0,
+                            queueArray.length
+                    );
+                    newQueueList[queueArray.length] = newSong;
+                    window.updateQueueList(newQueueList);
+                    queueArray = newQueueList;
+                }
+                finally {
+                    lock.unlock();
+                }
+            }
+        }).start();
     }
 
     private void addSong() {
@@ -126,33 +131,44 @@ public class Player {
     }
 
     private void removeSong() {
-        int id = this.window.getSelectedSongID();
-        int songIndex = getCurrentSongIndex(id);
-        try {
-            lock.lock();
-            if (songIndex == queueArray.length-1) {stopSong();}
-            else if (songIndex == selectedSongIndex) {nextSong();}
-            String[][] newQueueList = new String[queueArray.length - 1][7];
-            for (int index = 0; index < queueArray.length-1; index++) {
-                if (index < songIndex) {newQueueList[index] = queueArray[index];}
-                else {newQueueList[index] = queueArray[index+1];}
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    lock.lock();
+                    int id = window.getSelectedSongID();
+                    int songIndex = getCurrentSongIndex(id);
+                    if (songIndex == queueArray.length-1) {stopSong();}
+                    else if (songIndex == selectedSongIndex) {nextSong();}
+                    String[][] newQueueList = new String[queueArray.length - 1][7];
+                    for (int index = 0; index < queueArray.length-1; index++) {
+                        if (index < songIndex) {newQueueList[index] = queueArray[index];}
+                        else {newQueueList[index] = queueArray[index+1];}
+                    }
+                    queueArray = newQueueList;
+                    window.updateQueueList(newQueueList);
+                    selectedSongIndex -= 1;
+                    currentSongID = Integer.parseInt(queueArray[selectedSongIndex][6]);
+                }
+                finally {
+                    lock.unlock();
+                }
             }
-            this.queueArray = newQueueList;
-            this.window.updateQueueList(newQueueList);
-            selectedSongIndex -= 1;
-            currentSongID = Integer.parseInt(queueArray[selectedSongIndex][6]);
-        }
-        finally {
-            lock.unlock();
-        }
+        }).start();
     }
 
     private void updateCurrentSong(String[] song) {
         stopSong();
-        this.window.updatePlayingSongInfo(song[0], song[1], song[2]);
-        this.songLengthInSeconds = Integer.parseInt(song[5]);
-        this.currentSongID = Integer.parseInt(song[6]);
-        this.window.enableScrubberArea();
+        try {
+            lock.lock();
+            this.window.updatePlayingSongInfo(song[0], song[1], song[2]);
+            this.songLengthInSeconds = Integer.parseInt(song[5]);
+            this.currentSongID = Integer.parseInt(song[6]);
+            this.window.enableScrubberArea();
+        }
+        finally {
+            lock.unlock();
+        }
     }
 
     private int getCurrentSongIndex(int id) {
@@ -166,30 +182,46 @@ public class Player {
     }
 
     private void updateSong(int index) {
-        String[] song = queueArray[index];
-        this.selectedSongIndex = index;
-        updateCurrentSong(song);
+        try {
+            lock.lock();
+            String[] song = queueArray[index];
+            this.selectedSongIndex = index;
+            updateCurrentSong(song);
+        }
+        finally {
+            lock.unlock();
+        }
+
     }
 
     public void nextSong() {
-        int index = this.selectedSongIndex;
-
-        if (this.shuffle) {
-            do {
-                index = this.random.nextInt(queueArray.length - 1);
-            } while (index == this.selectedSongIndex && this.queueArray.length > 1);
-        } else {
-            if (index != queueArray.length - 1) {
-                index = index + 1;
-            } else {
-                index = 0;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    int index = selectedSongIndex;
+                    if (shuffle) {
+                        do {
+                            index = random.nextInt(queueArray.length - 1);
+                        } while (index == selectedSongIndex && queueArray.length > 1);
+                    } else {
+                        if (index != queueArray.length - 1) {
+                            index = index + 1;
+                        } else {
+                            index = 0;
+                        }
+                    }
+                    boolean wasPlaying = somethingIsPlaying;
+                    updateSong(index);
+                    if (wasPlaying) {
+                        playAndPause();
+                    }
+                }
+                finally {
+                    lock.unlock();
+                }
             }
-        }
-        boolean wasPlaying = this.somethingIsPlaying;
-        this.updateSong(index);
-        if (wasPlaying) {
-            playAndPause();
-        }
+        }).start();
     }
 
     private void previousSong() {
@@ -208,18 +240,31 @@ public class Player {
     }
 
     private void playSong() {
-        int id = this.window.getSelectedSongID();
-        currentSongID = id;
-        int index = getCurrentSongIndex(id);
-        this.updateSong(index);
-        this.playAndPause();
+        try {
+            lock.lock();
+            int id = this.window.getSelectedSongID();
+            currentSongID = id;
+            int index = getCurrentSongIndex(id);
+            this.updateSong(index);
+            this.playAndPause();
+        }
+        finally {
+            lock.unlock();
+        }
     }
 
     private void stopSong() {
-        this.window.resetMiniPlayer();
-        if (scrollerThread != null) scrollerThread.interrupt();
-        somethingIsPlaying = false;
-        this.currentSongID = -1;
+        try {
+            lock.lock();
+            this.window.resetMiniPlayer();
+            if (scrollerThread != null) scrollerThread.interrupt();
+            somethingIsPlaying = false;
+            this.currentSongID = -1;
+        }
+        finally {
+            lock.unlock();
+        }
+
     }
 
     private void playAndPause() {
