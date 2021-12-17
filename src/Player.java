@@ -202,7 +202,7 @@ public class Player {
                     int index = selectedSongIndex;
                     if (shuffle) {
                         do {
-                            index = random.nextInt(queueArray.length - 1);
+                            index = random.nextInt(queueArray.length);
                         } while (index == selectedSongIndex && queueArray.length > 1);
                     } else {
                         if (index != queueArray.length - 1) {
